@@ -1,0 +1,23 @@
+:root {
+    --media-mobile: 428px;
+    --media-tablet-min: 768px;
+    --media-tablet-medium: 1024px;
+    --media-desktop: 1200px;
+    --media-desktop-xl: 1920px;
+}
+
+.catalog-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.catalog-list-item {
+    margin-left: auto;
+    flex-basis: 33%;
+}
+
+@media (max-width: 520px) {
+    .catalog-list-item {
+        flex-basis: 100%;
+    }
+}

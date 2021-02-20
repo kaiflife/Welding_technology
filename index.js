@@ -1,10 +1,12 @@
 "use strict";
 
-import Catalog from "./Catalog";
+import Catalog from "./components/Catalog.js";
 
-const render = () => {
-  const catalog = Catalog();
+const render = async () => {
+  const catalog = new Catalog();
 
+
+  await catalog.getCatalogRequest();
 }
 
 
