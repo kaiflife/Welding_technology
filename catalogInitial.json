@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 4,
+      "name": "item4",
+      "price": 100,
+      "photo": ""
+    },
+    {
+      "id": 2,
+      "name": "item2",
+      "price": 50,
+      "photo": ""
+    },
+    {
+      "id": 3,
+      "name": "item3",
+      "price": 150,
+      "photo": ""
+    }
+  ]
+}
