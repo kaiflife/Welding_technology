@@ -24,11 +24,9 @@ export default class Catalog {
       const catalogListItems = data;
       this.catalogListItems = catalogListItems;
 
-      console.log(catalogListItems);
-
       this.initCatalogListItems(catalogListItems);
     } else {
-      console.error('lose request', e);
+      console.error('lose request', data);
     }
   }
 
@@ -43,8 +41,17 @@ export default class Catalog {
       })
     );
     if(success) {
-      this.targetCatalogItem.querySelector('.name').innerHTML = this.changedCatalogItem.name;
-      this.targetCatalogItem.querySelector('.price').innerHTML = this.changedCatalogItem.price;
+      const catalogNameEl = this.targetCatalogItem.querySelector('.name');
+      const { name, price } = this.changedCatalogItem;
+      if(name) {
+        catalogNameEl.innerHTML = name;
+      }
+
+      const catalogPriceEl = this.targetCatalogItem.querySelector('.price');
+      if(price) {
+        catalogPriceEl.innerHTML = price;
+      }
+
       this.catalogItemsModal.closeModal();
     } else {
       console.error('un success get data', data);
@@ -59,11 +66,11 @@ export default class Catalog {
 
       const itemNameEl = document.createElement('p');
       itemNameEl.className = 'name';
-      itemNameEl.innerHTML = item.name;
+      itemNameEl.innerHTML = item.name || 'Название не указано';
 
       const itemPriceEl = document.createElement('p');
       itemPriceEl.className = 'price';
-      itemPriceEl.innerHTML = item.price || 'Нет в наличии';
+      itemPriceEl.innerHTML = item.price || 'Цена не указана';
 
       const blockEls = [
         itemNameEl,
@@ -78,11 +85,11 @@ export default class Catalog {
   }
 
   onChangeName(value) {
-    this.changedCatalogItem.name = value;
+    this.changedCatalogItem.name = value || 'Название не указано';
   }
 
   onChangePrice(value) {
-    this.changedCatalogItem.price = value || 'Товара нету в наличии';
+    this.changedCatalogItem.price = value || 'Цена не указана';
   }
 
   async saveModalChanges() {
@@ -106,6 +113,15 @@ export default class Catalog {
         this.openModal();
       }
     });
+
+    document.body.addEventListener('keydown', (e) => {
+      const { key } = e;
+      if(key === 'Enter') {
+        if(this.catalogItemsModal?.isOpened) {
+          this.saveModalChanges()
+        }
+      }
+    });
   }
 
   openModal() {
@@ -114,6 +130,7 @@ export default class Catalog {
 
     const nameTitleEl = document.createElement('label');
     nameTitleEl.className = 'name';
+    nameTitleEl.innerHTML = 'Название товара';
     const nameInputEl = document.createElement('input');
     nameInputEl.className = 'name';
     nameInputEl.value = this.targetCatalogItem.querySelector('.name').innerHTML;
@@ -121,6 +138,7 @@ export default class Catalog {
 
     const priceTitleEl = document.createElement('label');
     priceTitleEl.className = 'price';
+    priceTitleEl.innerHTML = 'Цена товара';
     const priceInputEl = document.createElement('input');
     priceInputEl.className = 'price';
     priceInputEl.onchange = (e) => this.onChangePrice(e.target.value);
@@ -137,14 +155,14 @@ export default class Catalog {
     this.catalogItemsModal = new Modal({
       mainEls: modalEls,
       modalClassesName: 'catalog-item-modal js-catalog-item-modal',
+      closeModal: this.closeModal,
     });
 
     this.catalogItemsModal.openModal();
   }
 
-  closeModal() {
+  closeModal = () => {
     this.changedCatalogItem = {};
-    this.catalogItemsModal.closeModal();
     this.catalogItemsModal = null;
   }
 }
