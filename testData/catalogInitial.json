@@ -14,8 +14,32 @@
       "photo": ""
     },
     {
+      "id": 1,
+      "name": "item1",
+      "price": 150,
+      "photo": ""
+    },
+    {
       "id": 3,
       "name": "item3",
+      "price": 150,
+      "photo": ""
+    },
+    {
+      "id": 5,
+      "name": "item5",
+      "price": 150,
+      "photo": ""
+    }
+    ,{
+      "id": 6,
+      "name": "item6",
+      "price": 150,
+      "photo": ""
+    },
+    {
+      "id": 7,
+      "name": "item7",
       "price": 150,
       "photo": ""
     }

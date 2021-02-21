@@ -6,14 +6,20 @@
     --media-desktop-xl: 1920px;
 }
 
+.catalog-page main {
+    min-height: 100vh;
+}
+
 .catalog-list {
     display: flex;
     flex-wrap: wrap;
+    box-sizing: border-box;
+    padding: 20px;
 }
 
 .catalog-list-item {
-    margin-left: auto;
-    flex-basis: 33%;
+    margin-right: 1%;
+    flex-basis: 24%;
 
     display: flex;
     align-items: center;
@@ -22,6 +28,7 @@
     background: lightblue;
     border-radius: 14px;
     transition: 0.2s ease;
+    margin-bottom: 20px;
 }
 
 .catalog-list-item:hover {

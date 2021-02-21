@@ -2,6 +2,7 @@ import {catalogInitial, catalogSuccessPutItem} from "../api/catalog.js";
 import {jsSelector} from "../helpers/dom.js";
 import Modal from "./Modal.js";
 import {tryCatch} from "../helpers/errorHandler.js";
+import DragDrop from "./DragDrop.js";
 
 const catalogListItemClass = 'catalog-list-item';
 
@@ -15,16 +16,26 @@ export default class Catalog {
     }
 
     this.initListeners();
+    this.initClicks();
+  }
+
+  initClicks() {
+    this.nodes.catalogList.onclick = (e) => {
+      const { target } = e;
+
+      const isCatalogItem = target.classList.contains(`js-${catalogListItemClass}`);
+      if(isCatalogItem) {
+        this.targetCatalogItemEl = target;
+        this.openModal();
+      }
+    }
   }
 
   async getCatalogRequest() {
     const { success, data } = await tryCatch(() => fetch(this.catalogType));
 
     if(success) {
-      const catalogListItems = data;
-      this.catalogListItems = catalogListItems;
-
-      this.initCatalogListItems(catalogListItems);
+      this.initCatalogListItems(data);
     } else {
       console.error('lose request', data);
     }
@@ -41,13 +52,13 @@ export default class Catalog {
       })
     );
     if(success) {
-      const catalogNameEl = this.targetCatalogItem.querySelector('.name');
+      const catalogNameEl = this.targetCatalogItemEl.querySelector('.name');
       const { name, price } = this.changedCatalogItem;
       if(name) {
         catalogNameEl.innerHTML = name;
       }
 
-      const catalogPriceEl = this.targetCatalogItem.querySelector('.price');
+      const catalogPriceEl = this.targetCatalogItemEl.querySelector('.price');
       if(price) {
         catalogPriceEl.innerHTML = price;
       }
@@ -58,7 +69,11 @@ export default class Catalog {
     }
   }
 
-  initCatalogListItems(items) {
+  initCatalogListItems(items, savePrevious = false) {
+    if(!savePrevious) {
+      this.nodes.catalogList.innerHTML = null;
+      this.catalogListItems = items;
+    }
     items.forEach(item => {
       const itemBlockEl = document.createElement('div');
       itemBlockEl.className = `${catalogListItemClass} js-${catalogListItemClass}`;
@@ -82,6 +97,14 @@ export default class Catalog {
 
       this.nodes.catalogList.append(itemBlockEl);
     });
+
+    if(savePrevious) {
+      this.catalogListItems = [...this.catalogListItems, ...items];
+    }
+    if(items.length) {
+      if(this.dropDown) this.dropDown = null;
+      this.dropDown = new DragDrop(catalogListItemClass, catalogListItemClass);
+    }
   }
 
   onChangeName(value) {
@@ -103,25 +126,26 @@ export default class Catalog {
     modalSaveButton.disabled = false;
   }
 
-  initListeners() {
-    document.body.addEventListener('click', (e) => {
-      const { target } = e;
+  dragDropHover = (e) => {
+    const { detail: { hoverEl, dragDropEl } } = e;
 
-      const closestItemEl = target.closest(`.js-${catalogListItemClass}`);
-      if(closestItemEl) {
-        this.targetCatalogItem = closestItemEl;
-        this.openModal();
-      }
-    });
+    if(!dragDropEl) return;
 
-    document.body.addEventListener('keydown', (e) => {
-      const { key } = e;
-      if(key === 'Enter') {
-        if(this.catalogItemsModal?.isOpened) {
-          this.saveModalChanges()
-        }
-      }
-    });
+    const dragDropElId = dragDropEl.dataset.key;
+    if(!hoverEl) {
+      const copyItems = this.catalogListItems.filter(item => item.id != dragDropElId);
+      const draggableItem = this.catalogListItems.find(item => item.id == dragDropElId);
+      copyItems.push(draggableItem);
+      this.initCatalogListItems(copyItems);
+      return;
+    }
+
+    const hoverElId = hoverEl.dataset.key;
+    const copyItems = this.catalogListItems.filter(item => item.id != dragDropElId);
+    const hoverElIndex = copyItems.findIndex(item => item.id == hoverElId);
+    const draggableItem = this.catalogListItems.find(item => item.id == dragDropElId);
+    copyItems.splice(hoverElIndex, 0, draggableItem);
+    this.initCatalogListItems(copyItems);
   }
 
   openModal() {
@@ -133,7 +157,7 @@ export default class Catalog {
     nameTitleEl.innerHTML = 'Название товара';
     const nameInputEl = document.createElement('input');
     nameInputEl.className = 'name';
-    nameInputEl.value = this.targetCatalogItem.querySelector('.name').innerHTML;
+    nameInputEl.value = this.targetCatalogItemEl.querySelector('.name').innerHTML;
     nameInputEl.onchange = (e) => this.onChangeName(e.target.value);
 
     const priceTitleEl = document.createElement('label');
@@ -142,7 +166,7 @@ export default class Catalog {
     const priceInputEl = document.createElement('input');
     priceInputEl.className = 'price';
     priceInputEl.onchange = (e) => this.onChangePrice(e.target.value);
-    priceInputEl.value = this.targetCatalogItem.querySelector('.price').innerHTML;
+    priceInputEl.value = this.targetCatalogItemEl.querySelector('.price').innerHTML;
     priceInputEl.type = 'number';
 
     const saveChangesEl = document.createElement('button');
@@ -164,5 +188,18 @@ export default class Catalog {
   closeModal = () => {
     this.changedCatalogItem = {};
     this.catalogItemsModal = null;
+  }
+
+  initListeners() {
+    document.body.addEventListener('keydown', (e) => {
+      const { key } = e;
+      if(key === 'Enter') {
+        if(this.catalogItemsModal?.isOpened) {
+          this.saveModalChanges()
+        }
+      }
+    });
+
+    document.body.addEventListener('dragDropHover', this.dragDropHover)
   }
 }

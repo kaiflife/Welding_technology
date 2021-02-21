@@ -1,0 +1,12 @@
+.drag-drop-active {
+    position: absolute;
+    transition: initial;
+    z-index: 1000;
+
+    pointer-events: none;
+}
+
+
+.body-drag-drop {
+    user-select: none;
+}

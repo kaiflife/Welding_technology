@@ -1,4 +1,4 @@
-const styles = ['modal', 'button', 'catalog'];
+const styles = ['modal', 'button', 'catalog', 'drag-drop', 'index'];
 
 styles.forEach(item => {
   const link = document.createElement('link');
