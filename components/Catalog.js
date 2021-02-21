@@ -3,6 +3,8 @@ import {jsSelector} from "../helpers/dom.js";
 import Modal from "./Modal.js";
 import {tryCatch} from "../helpers/errorHandler.js";
 import DragDrop from "./DragDrop.js";
+import createEl from "../helpers/createEl.js";
+import changeDataEl from "../helpers/findChangeEl.js";
 
 const catalogListItemClass = 'catalog-list-item';
 
@@ -23,9 +25,9 @@ export default class Catalog {
     this.nodes.catalogList.onclick = (e) => {
       const { target } = e;
 
-      const isCatalogItem = target.classList.contains(`js-${catalogListItemClass}`);
+      const isCatalogItem = target.classList.contains(`js-name`);
       if(isCatalogItem) {
-        this.targetCatalogItemEl = target;
+        this.targetCatalogItemEl = target.closest(`.js-${catalogListItemClass}`);
         this.openModal();
       }
     }
@@ -52,16 +54,14 @@ export default class Catalog {
       })
     );
     if(success) {
-      const catalogNameEl = this.targetCatalogItemEl.querySelector('.name');
       const { name, price } = this.changedCatalogItem;
-      if(name) {
-        catalogNameEl.innerHTML = name;
-      }
-
-      const catalogPriceEl = this.targetCatalogItemEl.querySelector('.price');
-      if(price) {
-        catalogPriceEl.innerHTML = price;
-      }
+      const dataEls = [
+        {byEl: this.targetCatalogItemEl, innerHTML: name, byQuery: '.js-name'},
+        {byEl: this.targetCatalogItemEl, innerHTML: price, byQuery: '.js-price'},
+      ];
+      dataEls.forEach(data => {
+        changeDataEl.call(this, data);
+      });
 
       this.catalogItemsModal.closeModal();
     } else {
@@ -75,24 +75,19 @@ export default class Catalog {
       this.catalogListItems = items;
     }
     items.forEach(item => {
-      const itemBlockEl = document.createElement('div');
-      itemBlockEl.className = `${catalogListItemClass} js-${catalogListItemClass}`;
-      itemBlockEl.dataset.key = item.id;
+      const itemBlockEl = createEl({
+        className: `${catalogListItemClass} js-${catalogListItemClass}`,
+        datasets: [{name: 'key', value: item.id}]
+      });
 
-      const itemNameEl = document.createElement('p');
-      itemNameEl.className = 'name';
-      itemNameEl.innerHTML = item.name || 'Название не указано';
-
-      const itemPriceEl = document.createElement('p');
-      itemPriceEl.className = 'price';
-      itemPriceEl.innerHTML = item.price || 'Цена не указана';
-
-      const blockEls = [
-        itemNameEl,
-        itemPriceEl,
+      const blockElsProps = [
+        {elName: 'p', className: 'name js-name', innerHTML: item.name || 'Название не указано'},
+        {elName: 'p', className: 'price js-price', innerHTML: item.price || 'Цена не указана'},
       ];
-      blockEls.forEach(el => {
-        itemBlockEl.append(el);
+
+      blockElsProps.forEach(item => {
+        const newEl = createEl(item);
+        itemBlockEl.append(newEl);
       });
 
       this.nodes.catalogList.append(itemBlockEl);
@@ -149,32 +144,17 @@ export default class Catalog {
   }
 
   openModal() {
-    const modalEl = document.createElement('div');
-    modalEl.className = 'modal js-modal';
+    const valueName = this.targetCatalogItemEl.querySelector('.js-name').innerHTML;
+    const valuePrice = this.targetCatalogItemEl.querySelector('.js-price').innerHTML;
+    const elsProps = [
+      {className: 'name', elName: 'label', innerHTML: 'Название товара'},
+      {className: 'name', elName: 'input', value: valueName, onchange: (e) => this.onChangeName(e.target.value)},
+      {className: 'price', elName: 'label', innerHTML: 'Цена товара'},
+      {className: 'price', type: 'number', elName: 'input', value: valuePrice, onchange: (e) => this.onChangePrice(e.target.value)},
+      {className: 'control-button js-modal-save-button', elName: 'button', onclick: () => this.saveModalChanges(), innerHTML: 'Сохранить изменения'},
+    ];
 
-    const nameTitleEl = document.createElement('label');
-    nameTitleEl.className = 'name';
-    nameTitleEl.innerHTML = 'Название товара';
-    const nameInputEl = document.createElement('input');
-    nameInputEl.className = 'name';
-    nameInputEl.value = this.targetCatalogItemEl.querySelector('.name').innerHTML;
-    nameInputEl.onchange = (e) => this.onChangeName(e.target.value);
-
-    const priceTitleEl = document.createElement('label');
-    priceTitleEl.className = 'price';
-    priceTitleEl.innerHTML = 'Цена товара';
-    const priceInputEl = document.createElement('input');
-    priceInputEl.className = 'price';
-    priceInputEl.onchange = (e) => this.onChangePrice(e.target.value);
-    priceInputEl.value = this.targetCatalogItemEl.querySelector('.price').innerHTML;
-    priceInputEl.type = 'number';
-
-    const saveChangesEl = document.createElement('button');
-    saveChangesEl.className = 'control-button js-modal-save-button';
-    saveChangesEl.onclick = () => this.saveModalChanges();
-    saveChangesEl.innerHTML = 'Сохранить изменения';
-
-    const modalEls = [nameTitleEl, nameInputEl, priceTitleEl, priceInputEl, saveChangesEl];
+    const modalEls = elsProps.map(item => createEl(item));
 
     this.catalogItemsModal = new Modal({
       mainEls: modalEls,

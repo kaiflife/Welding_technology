@@ -1,11 +1,3 @@
-:root {
-    --media-mobile: 428px;
-    --media-tablet-min: 768px;
-    --media-tablet-medium: 1024px;
-    --media-desktop: 1200px;
-    --media-desktop-xl: 1920px;
-}
-
 .catalog-page main {
     min-height: 100vh;
 }
@@ -35,6 +27,13 @@
     cursor: pointer;
 
     background: aqua;
+}
+
+header {
+    height: 56px;
+    width: 100%;
+
+    background: lightgray;
 }
 
 @media (max-width: 520px) {

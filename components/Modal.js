@@ -1,3 +1,6 @@
+import createEl from "../helpers/createEl.js";
+import delay from "../helpers/delay.js";
+
 const skeleton = ['header', 'main', 'footer'];
 
 export default class Modal {
@@ -9,13 +12,11 @@ export default class Modal {
       modalClassesName = '',
       openModal,
       closeModal,
-      enterEventName,
     }
   ) {
     this.modalClassesName = modalClassesName;
     this.isOpened = false;
     this.modalEl = null;
-    this.enterEventName = enterEventName;
 
     this.outsideFuncs = {
       openModal, closeModal,
@@ -25,8 +26,9 @@ export default class Modal {
   }
 
   createModal() {
-    const modalEl = document.createElement('div');
-    modalEl.className = `modal js-modal ${this.modalClassesName}`;
+    const modalEl = createEl({
+      className: `modal js-modal ${this.modalClassesName}`,
+    })
 
     skeleton.forEach(elName => {
       const innerEls = this.innerSkeletonEls[`${elName}Els`];
@@ -34,8 +36,9 @@ export default class Modal {
       //if have no els then continue
       if(!(Array.isArray(innerEls) && innerEls.length)) return;
 
-      const newEl = document.createElement('div');
-      newEl.className = `modal-${elName}`;
+      const newEl = createEl({
+        className: `modal-${elName}`,
+      });
 
       innerEls.forEach(innerEl => {
         newEl.append(innerEl);
@@ -50,15 +53,15 @@ export default class Modal {
   }
 
   openModal() {
-    this.isOpened = true;
-
     this.createModal();
     this.initListeners();
+    delay.call(this, {
+      name: 'isOpenedModal',
+      func: () => this.isOpened = true,
+    });
   }
 
   closeModal() {
-    this.isOpened = false;
-
     this.modalEl.remove();
 
     document.body.removeEventListener('keydown', this.onPressEscape);
@@ -66,6 +69,7 @@ export default class Modal {
     if(this.outsideFuncs.closeModal) {
       this.outsideFuncs.closeModal();
     }
+    this.isOpened = false;
   }
 
   onPressEscape = (e) => {
