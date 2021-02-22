@@ -4,9 +4,10 @@ import Modal from "./Modal.js";
 import {tryCatch} from "../helpers/errorHandler.js";
 import DragDrop from "./DragDrop.js";
 import createEl from "../helpers/createEl.js";
-import changeDataEl from "../helpers/findChangeEl.js";
+import changeDataEl from "../helpers/changeDataEl.js";
 
-const catalogListItemClass = 'catalog-list-item';
+const catalogListClass = 'catalog-list';
+const catalogListItemClass = `${catalogListClass}-item`;
 
 export default class Catalog {
   constructor(catalogType = catalogInitial) {
@@ -14,7 +15,7 @@ export default class Catalog {
     this.changedCatalogItem = {};
 
     this.nodes = {
-      catalogList: jsSelector('catalog-list'),
+      catalogList: jsSelector(catalogListClass),
     }
 
     this.initListeners();
@@ -63,9 +64,25 @@ export default class Catalog {
         changeDataEl.call(this, data);
       });
 
+      const previousItem = {};
+      this.catalogListItems.forEach((item, index) => {
+        if(item.id == this.targetCatalogItemEl.dataset.key) {
+          previousItem.index = index;
+          previousItem.data = {...item};
+        }
+      });
+
+      for(let dataName in previousItem.data) {
+        if(this.changedCatalogItem[dataName]) {
+          previousItem.data[dataName] = this.changedCatalogItem[dataName];
+        }
+      }
+
+      this.catalogListItems.splice(previousItem.index, 1, previousItem.data);
+
       this.catalogItemsModal.closeModal();
     } else {
-      console.error('un success get data', data);
+      console.error('unsuccess get data', data);
     }
   }
 
@@ -75,6 +92,10 @@ export default class Catalog {
       this.catalogListItems = items;
     }
     items.forEach(item => {
+      const container = createEl({
+        className: `${catalogListClass}-container`,
+      });
+
       const itemBlockEl = createEl({
         className: `${catalogListItemClass} js-${catalogListItemClass}`,
         datasets: [{name: 'key', value: item.id}]
@@ -90,7 +111,9 @@ export default class Catalog {
         itemBlockEl.append(newEl);
       });
 
-      this.nodes.catalogList.append(itemBlockEl);
+      container.append(itemBlockEl);
+
+      this.nodes.catalogList.append(container);
     });
 
     if(savePrevious) {
@@ -124,29 +147,37 @@ export default class Catalog {
   dragDropHover = (e) => {
     const { detail: { hoverEl, dragDropEl } } = e;
 
-    if(!dragDropEl) return;
+    if(!(dragDropEl && hoverEl)) return;
 
     const dragDropElId = dragDropEl.dataset.key;
-    if(!hoverEl) {
-      const copyItems = this.catalogListItems.filter(item => item.id != dragDropElId);
-      const draggableItem = this.catalogListItems.find(item => item.id == dragDropElId);
-      copyItems.push(draggableItem);
-      this.initCatalogListItems(copyItems);
-      return;
+    const hoverElId = hoverEl.dataset.key;
+    const copyItems = this.catalogListItems.slice();
+    const hoverElIndex = copyItems.findIndex(item => item.id == hoverElId);
+    const dragDropElIndex = copyItems.findIndex(item => item.id == dragDropElId);
+    const dragDropItem = this.catalogListItems.find(item => item.id == dragDropElId);
+    const hoverElItem = this.catalogListItems.find(item => item.id == hoverElId);
+    const isCloseToDropDownEl = Math.abs(hoverElIndex - dragDropElIndex) === 1;
+    const isLastIndexHover = hoverElIndex === copyItems.length - 1;
+    if(isCloseToDropDownEl) {
+      copyItems.splice(hoverElIndex, 1, dragDropItem);
+      copyItems.splice(dragDropElIndex, 1, hoverElItem);
+    } else if((dragDropElIndex < hoverElIndex) && isLastIndexHover) {
+      copyItems.splice(hoverElIndex, 1, dragDropItem);
+      copyItems.splice(hoverElIndex, 0, hoverElItem);
+      copyItems.splice(dragDropElIndex, 1);
+    } else {
+      copyItems.splice(hoverElIndex, 0, dragDropItem);
+      copyItems.splice(dragDropElIndex+1, 1);
     }
 
-    const hoverElId = hoverEl.dataset.key;
-    const copyItems = this.catalogListItems.filter(item => item.id != dragDropElId);
-    const hoverElIndex = copyItems.findIndex(item => item.id == hoverElId);
-    const draggableItem = this.catalogListItems.find(item => item.id == dragDropElId);
-    copyItems.splice(hoverElIndex, 0, draggableItem);
     this.initCatalogListItems(copyItems);
   }
 
   openModal() {
     const valueName = this.targetCatalogItemEl.querySelector('.js-name').innerHTML;
     const valuePrice = this.targetCatalogItemEl.querySelector('.js-price').innerHTML;
-    const elsProps = [
+
+    const mainElsProps = [
       {className: 'name', elName: 'label', innerHTML: 'Название товара'},
       {className: 'name', elName: 'input', value: valueName, onchange: (e) => this.onChangeName(e.target.value)},
       {className: 'price', elName: 'label', innerHTML: 'Цена товара'},
@@ -154,10 +185,10 @@ export default class Catalog {
       {className: 'control-button js-modal-save-button', elName: 'button', onclick: () => this.saveModalChanges(), innerHTML: 'Сохранить изменения'},
     ];
 
-    const modalEls = elsProps.map(item => createEl(item));
+    const modalMainEls = mainElsProps.map(item => createEl(item));
 
     this.catalogItemsModal = new Modal({
-      mainEls: modalEls,
+      mainEls: modalMainEls,
       modalClassesName: 'catalog-item-modal js-catalog-item-modal',
       closeModal: this.closeModal,
     });

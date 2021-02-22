@@ -10,23 +10,25 @@
 }
 
 .catalog-list-item {
-    margin-right: 1%;
-    flex-basis: 24%;
-
     display: flex;
+    width: 50%;
+    margin: 0 auto;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     background: lightblue;
     border-radius: 14px;
     transition: 0.2s ease;
-    margin-bottom: 20px;
 }
 
 .catalog-list-item:hover {
     cursor: pointer;
-
     background: aqua;
+}
+
+.catalog-list-container {
+    margin-bottom: 20px;
+    flex-basis: 25%;
 }
 
 header {
@@ -36,8 +38,20 @@ header {
     background: lightgray;
 }
 
+.catalog-item-modal label {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.catalog-item-modal input {
+    padding: 10px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+
 @media (max-width: 520px) {
-    .catalog-list-item {
+    .catalog-list-container {
         flex-basis: 100%;
     }
 }

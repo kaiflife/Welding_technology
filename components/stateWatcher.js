@@ -1,2 +1,6 @@
-//data-state-watcher-name
-//data-state-watcher-value
+export default class StateWatcher {
+  constructor() {
+    this.state = document.body.querySelectorAll('*[data-state-name]');
+    console.log(this.state);
+  }
+}
