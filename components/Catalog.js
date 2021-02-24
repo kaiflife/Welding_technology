@@ -120,8 +120,13 @@ export default class Catalog {
       this.catalogListItems = [...this.catalogListItems, ...items];
     }
     if(items.length) {
-      if(this.dropDown) this.dropDown = null;
-      this.dropDown = new DragDrop(catalogListItemClass, catalogListItemClass);
+      if(this.dropDown) {
+        this.dropDown.removeAllListeners();
+      }
+      this.dropDown = new DragDrop({
+        elClass: catalogListItemClass,
+        hoverElClass: catalogListItemClass,
+      });
     }
   }
 
@@ -158,6 +163,7 @@ export default class Catalog {
     const hoverElItem = this.catalogListItems.find(item => item.id == hoverElId);
     const isCloseToDropDownEl = Math.abs(hoverElIndex - dragDropElIndex) === 1;
     const isLastIndexHover = hoverElIndex === copyItems.length - 1;
+    const isBeforeLastIndexHover = hoverElIndex === copyItems.length - 2;
     if(isCloseToDropDownEl) {
       copyItems.splice(hoverElIndex, 1, dragDropItem);
       copyItems.splice(dragDropElIndex, 1, hoverElItem);
@@ -165,9 +171,15 @@ export default class Catalog {
       copyItems.splice(hoverElIndex, 1, dragDropItem);
       copyItems.splice(hoverElIndex, 0, hoverElItem);
       copyItems.splice(dragDropElIndex, 1);
-    } else {
+    } else if(dragDropElIndex > hoverElIndex) {
       copyItems.splice(hoverElIndex, 0, dragDropItem);
       copyItems.splice(dragDropElIndex+1, 1);
+    } else if((dragDropElIndex < hoverElIndex) && isBeforeLastIndexHover) {
+      copyItems.splice(hoverElIndex+1, 0, dragDropItem);
+      copyItems.splice(dragDropElIndex, 1);
+    } else {
+      copyItems.splice(hoverElIndex, 0, dragDropItem);
+      copyItems.splice(dragDropElIndex, 1);
     }
 
     this.initCatalogListItems(copyItems);

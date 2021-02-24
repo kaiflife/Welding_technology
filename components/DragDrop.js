@@ -1,7 +1,9 @@
+import {jsSelector, scrollToEl} from "../helpers/dom.js";
+
 const dragDropActiveClass = 'drag-drop-active';
 
 export default class DragDrop {
-  constructor(elClass, hoverElClass, customEventName = 'dragDropHover') {
+  constructor({elClass, hoverElClass, customEventName = 'dragDropHover'}) {
     this.elClass = `js-${elClass}`;
     this.hoverElClass = hoverElClass;
     this.customEventName = customEventName;
@@ -10,10 +12,18 @@ export default class DragDrop {
   }
 
   moveAt = (e) => {
-    const touches = e.changedTouches;
-    this.dragDropEl.style.left = (touches ? touches[0].pageX : e.pageX) - this.shiftX + 'px';
-    this.dragDropEl.style.top = (touches ? touches[0].pageY : e.pageY) - this.shiftY + 'px';
-    this.hoverStart(e);
+    let touch;
+    if(this.checkTouchEvent()) {
+      touch = e.changedTouches[0];
+      if(e.cancelable) {
+        e.preventDefault();
+        this.dragDropScroll(e);
+      } else {
+        return;
+      }
+    }
+    this.dragDropEl.style.left = (touch ? touch.pageX : e.pageX) - this.shiftX + 'px';
+    this.dragDropEl.style.top = (touch ? touch.pageY : e.pageY) - this.shiftY + 'px';
   }
 
   clearDragDropTimeout = () => {
@@ -22,28 +32,22 @@ export default class DragDrop {
     }
   }
 
-  dragDropEnd = (e) => {
+  dragDropEnd = () => {
     this.clearDragDropTimeout();
 
     if(!this.dragDropEl) return;
-    this.checkHoverableItem(e);
+    this.checkHoverableItem();
 
     this.changeDragDropItemStyles({ isRemove: true })
-    this.dragDropEl.onmouseup = null;
 
-    document.body.removeEventListener(this.moveEventName, this.moveAt);
+    document.body.removeEventListener(this.moveEventName, this.moveAt, { passive: true });
 
     this.shiftX = null;
     this.shiftY = null;
     this.dragDropEl = null;
-    this.hoverEl = null;
   }
 
-  changeDragDropItemStyles = ({
-      styles = {
-        height: `${this.dragDropEl.offsetHeight}px`,
-        width: `${this.dragDropEl.offsetWidth}px`,
-      }, isRemove = false} = {}) => {
+  changeDragDropItemStyles = ({styles = {height: `${this.dragDropEl.offsetHeight}px`, width: `${this.dragDropEl.offsetWidth}px`}, isRemove = false} = {}) => {
     for(const styleName in styles) {
       this.dragDropEl.style[styleName] = isRemove ? null : styles[styleName];
     }
@@ -58,31 +62,42 @@ export default class DragDrop {
     }
   }
 
-  hoverStart = (e) => {
-    if(this.hoverElClass) {
-      const { target } = e;
-      if(target.classList.contains(this.elClass) && !target.classList.contains(dragDropActiveClass)) {
-        this.hoverEl = target;
-      } else {
-        this.hoverEl = null;
+  checkTouchEvent = () => this.moveEventName === 'touchmove';
+
+  checkHoverableItem = () => {
+    if(!(this.hoverElClass)) return;
+
+    const dragDropProps = this.dragDropEl.getBoundingClientRect();
+    const hoverItems = jsSelector(`${this.hoverElClass}:not(.${dragDropActiveClass}`, true);
+    const target = hoverItems.find(item => {
+      const hoverBoundedProps = item.getBoundingClientRect();
+      const hasCollision = hoverBoundedProps.x <= dragDropProps.right &&
+        hoverBoundedProps.right >= dragDropProps.x &&
+        hoverBoundedProps.y <= dragDropProps.bottom &&
+        hoverBoundedProps.bottom >= dragDropProps.y;
+      if(hasCollision) {
+        return item;
       }
-    }
+    });
+
+    if(!target) return;
+
+    const dragDropHover = new CustomEvent(this.customEventName, {
+        detail: { hoverEl: target, dragDropEl: this.dragDropEl }
+    });
+    document.body.dispatchEvent(dragDropHover);
   }
 
-  checkHoverableItem = (e) => {
-    if(!(this.hoverElClass && this.hoverEl)) return;
-
-    const { pageX, pageY } = e;
-    const hoverBoundedProps = this.hoverEl.getBoundingClientRect();
-    const hasCollision = hoverBoundedProps.right >= pageX &&
-      hoverBoundedProps.left <= pageX &&
-      hoverBoundedProps.top <= pageY &&
-      hoverBoundedProps.bottom >= pageY;
-    if(hasCollision) {
-      const dragDropHover = new CustomEvent(this.customEventName, {
-          detail: { hoverEl: this.hoverEl, dragDropEl: this.dragDropEl }
-      });
-      document.body.dispatchEvent(dragDropHover);
+  dragDropScroll = (e) => {
+    const dragDropRect = this.dragDropEl.getBoundingClientRect();
+    const el = this.dragDropEl;
+    const maxScrollHeight = document.body.scrollHeight;
+    const maxScreenHeight = window.screen.height;
+    const halfRect = dragDropRect.height/2;
+    if(dragDropRect.bottom >= maxScreenHeight && (maxScrollHeight - halfRect >= e.touches[0].pageY)) {
+      scrollToEl({ el, block: 'end'});
+    } else if(dragDropRect.top <= -halfRect) {
+      scrollToEl({ el, block: 'start'});
     }
   }
 
@@ -96,26 +111,41 @@ export default class DragDrop {
       //After mousedown with delay 500 ms dropdown will start
       this.dragDropTimeout = setTimeout(() => {
         const touches = e.changedTouches;
+        let touch;
         if(!touches) {
           e.preventDefault();
+        } else {
+          touch = touches[0];
         }
         this.moveEventName = touches ? 'touchmove' : 'mousemove';
         this.dragDropEl = closestItem;
-        this.shiftX = (touches ? touches[0].clientX : e.clientX) - this.dragDropEl.getBoundingClientRect().left;
-        this.shiftY = (touches ? touches[0].clientY : e.clientY) - this.dragDropEl.getBoundingClientRect().top;
+        this.shiftX = (touches ? touch.clientX : e.clientX) - this.dragDropEl.getBoundingClientRect().left;
+        this.shiftY = (touches ? touch.clientY : e.clientY) - this.dragDropEl.getBoundingClientRect().top;
         this.changeDragDropItemStyles();
 
         this.moveAt(e);
-        document.body.addEventListener(this.moveEventName, this.moveAt);
+        document.body.addEventListener(this.moveEventName, this.moveAt, {passive: !this.checkTouchEvent()});
       }, 500);
     }
   }
 
   initListeners() {
-    document.body.addEventListener('mousedown', this.dragDropStart);
-    document.body.addEventListener('mouseup', this.dragDropEnd);
-    document.body.addEventListener('mouseover', this.dragDropEl);
-    document.body.addEventListener('touchstart', this.dragDropStart);
-    document.body.addEventListener('touchend', this.dragDropEnd);
+    this.listeners = [
+      {name: 'mousedown', func: this.dragDropStart},
+      {name: 'mouseup', func: this.dragDropEnd},
+      {name: 'mouseover', func: this.dragDropEl},
+      {name: 'touchstart', func: this.dragDropStart},
+      {name: 'touchend', func: this.dragDropEnd},
+    ];
+
+    this.listeners.forEach(listener => {
+      document.body.addEventListener(listener.name, listener.func);
+    });
+  }
+
+  removeAllListeners() {
+    this.listeners.forEach(listener => {
+      document.body.removeEventListener(listener.name, listener.func);
+    });
   }
 }

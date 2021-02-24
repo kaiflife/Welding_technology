@@ -1,5 +1,17 @@
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 56px;
+    width: 100%;
+    background: lightgray;
+    z-index: 3;
+}
+
 .catalog-page main {
+    box-sizing: border-box;
     min-height: 100vh;
+    padding-top: 56px;
 }
 
 .catalog-list {
@@ -10,6 +22,7 @@
 }
 
 .catalog-list-item {
+    position: relative;
     display: flex;
     width: 50%;
     margin: 0 auto;
@@ -29,13 +42,6 @@
 .catalog-list-container {
     margin-bottom: 20px;
     flex-basis: 25%;
-}
-
-header {
-    height: 56px;
-    width: 100%;
-
-    background: lightgray;
 }
 
 .catalog-item-modal label {
