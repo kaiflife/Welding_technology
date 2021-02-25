@@ -1,17 +1,19 @@
-import {catalogInitial, catalogSuccessPutItem} from "../api/catalog.js";
+import {catalogInitial, catalogSuccessPutItem, getCategoriesSuccess} from "../api/catalog.js";
 import {jsSelector} from "../helpers/dom.js";
 import Modal from "./Modal.js";
 import {tryCatch} from "../helpers/errorHandler.js";
 import DragDrop from "./DragDrop.js";
 import createEl from "../helpers/createEl.js";
 import changeDataEl from "../helpers/changeDataEl.js";
+import {createCategoriesListItems} from "../helpers/makeSubcategories.js";
 
 const catalogListClass = 'catalog-list';
 const catalogListItemClass = `${catalogListClass}-item`;
 
 export default class Catalog {
-  constructor(catalogType = catalogInitial) {
+  constructor(catalogType = catalogInitial, categoriesType = getCategoriesSuccess) {
     this.catalogType = catalogType;
+    this.categoriesType = categoriesType;
     this.changedCatalogItem = {};
 
     this.nodes = {
@@ -39,6 +41,16 @@ export default class Catalog {
 
     if(success) {
       this.initCatalogListItems(data);
+    } else {
+      console.error('lose request', data);
+    }
+  }
+
+  async getCategoriesRequest() {
+    const { success, data } = await tryCatch(() => fetch(this.categoriesType));
+
+    if(success) {
+      createCategoriesListItems(data, 'categories-container');
     } else {
       console.error('lose request', data);
     }
@@ -103,7 +115,12 @@ export default class Catalog {
 
       const blockElsProps = [
         {elName: 'p', className: 'name js-name', innerHTML: item.name || 'Название не указано'},
-        {elName: 'p', className: 'price js-price', innerHTML: item.price || 'Цена не указана'},
+        {
+          elName: 'p',
+          className: 'price js-price',
+          datasets: [{name: 'currency', value: item.currency}],
+          innerHTML: item.price || 'Цена не указана'
+        },
       ];
 
       blockElsProps.forEach(item => {
@@ -187,14 +204,29 @@ export default class Catalog {
 
   openModal() {
     const valueName = this.targetCatalogItemEl.querySelector('.js-name').innerHTML;
-    const valuePrice = this.targetCatalogItemEl.querySelector('.js-price').innerHTML;
+    const priceEl = this.targetCatalogItemEl.querySelector('.js-price');
+    const valuePrice = priceEl.innerHTML;
+    const currency = priceEl.dataset.currency;
+    const priceDatasets = [{name: 'currency', value: currency}];
 
     const mainElsProps = [
       {className: 'name', elName: 'label', innerHTML: 'Название товара'},
       {className: 'name', elName: 'input', value: valueName, onchange: (e) => this.onChangeName(e.target.value)},
       {className: 'price', elName: 'label', innerHTML: 'Цена товара'},
-      {className: 'price', type: 'number', elName: 'input', value: valuePrice, onchange: (e) => this.onChangePrice(e.target.value)},
-      {className: 'control-button js-modal-save-button', elName: 'button', onclick: () => this.saveModalChanges(), innerHTML: 'Сохранить изменения'},
+      {
+        className: 'price',
+        type: 'number',
+        elName: 'input',
+        datasets: priceDatasets,
+        value: valuePrice,
+        onchange: (e) => this.onChangePrice(e.target.value)
+      },
+      {
+        className: 'control-button js-modal-save-button',
+        elName: 'button',
+        onclick: () => this.saveModalChanges(),
+        innerHTML: 'Сохранить изменения'
+      },
     ];
 
     const modalMainEls = mainElsProps.map(item => createEl(item));
@@ -217,7 +249,7 @@ export default class Catalog {
     document.body.addEventListener('keydown', (e) => {
       const { key } = e;
       if(key === 'Enter') {
-        if(this.catalogItemsModal?.isOpened) {
+        if(this.catalogItemsModal && this.catalogItemsModal.isOpened) {
           this.saveModalChanges()
         }
       }

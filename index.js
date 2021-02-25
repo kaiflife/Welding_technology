@@ -4,7 +4,11 @@ import Catalog from "./components/Catalog.js";
 
 const render = async () => {
   const catalog = new Catalog();
-  await catalog.getCatalogRequest();
+
+  Promise.all([
+    catalog.getCategoriesRequest(),
+    catalog.getCatalogRequest(),
+  ]);
 }
 
 

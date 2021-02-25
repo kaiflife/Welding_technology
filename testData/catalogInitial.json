@@ -5,43 +5,50 @@
       "id": 4,
       "name": "item4",
       "price": 100,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     },
     {
       "id": 2,
       "name": "item2",
       "price": 50,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     },
     {
       "id": 1,
       "name": "item1",
       "price": 150,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     },
     {
       "id": 3,
       "name": "item3",
       "price": 150,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     },
     {
       "id": 5,
       "name": "item5",
       "price": 150,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     }
     ,{
       "id": 6,
       "name": "item6",
       "price": 150,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     },
     {
       "id": 7,
       "name": "item7",
       "price": 150,
-      "photo": ""
+      "photo": "",
+      "currency": "Р"
     }
   ]
 }

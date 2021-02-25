@@ -7,6 +7,7 @@ const createEl = ({
   onclick,
   onchange,
   datasets = [],
+  appendInnerHTML,
 }) => {
   const el = document.createElement(elName);
   if(className) el.className = className;
@@ -15,6 +16,7 @@ const createEl = ({
   if(innerHTML) el.innerHTML = innerHTML;
   if(onclick) el.onclick = onclick;
   if(onchange) el.onchange = onchange;
+  if(appendInnerHTML) el.append(appendInnerHTML);
   if(datasets.length) {
     datasets.forEach(dataset => {
       el.dataset[dataset.name] = dataset.value;

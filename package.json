@@ -1,0 +1,7 @@
+{
+  "name": "Welding_technology",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "py -m http.server 8888"
+  }
+}

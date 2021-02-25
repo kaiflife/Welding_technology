@@ -135,6 +135,7 @@ export default class DragDrop {
       {name: 'mouseup', func: this.dragDropEnd},
       {name: 'mouseover', func: this.dragDropEl},
       {name: 'touchstart', func: this.dragDropStart},
+      {name: 'touchmove', func: this.clearDragDropTimeout},
       {name: 'touchend', func: this.dragDropEnd},
     ];
 

@@ -4,7 +4,7 @@ header {
     left: 0;
     height: 56px;
     width: 100%;
-    background: lightgray;
+    background: var(--header-bg-color);
     z-index: 3;
 }
 
@@ -39,6 +39,12 @@ header {
     background: aqua;
 }
 
+.price::after {
+    content: attr(data-currency);
+    margin-left: 2px;
+    font-size: 0.8rem;
+}
+
 .catalog-list-container {
     margin-bottom: 20px;
     flex-basis: 25%;
@@ -55,6 +61,46 @@ header {
     margin-bottom: 20px;
 }
 
+.categories-container {
+    min-height: 100%;
+    background-color: var(--header-bg-color);
+}
+
+.category {
+    padding: 10px;
+    width: fit-content;
+    position: relative;
+}
+
+.category label {
+    cursor: pointer;
+}
+
+.categories-container > .category {
+    display: none;
+}
+
+.categories-container > .category > .category {
+    display: none;
+}
+
+.category .category label:before {
+    content: '-';
+    position: absolute;
+    left: -2px;
+}
+
+.category .category {
+    margin-left: 10px;
+}
+
+.category:hover > .category {
+    display: block;
+}
+
+.categories-container:hover > .category {
+    display: block;
+}
 
 @media (max-width: 520px) {
     .catalog-list-container {
