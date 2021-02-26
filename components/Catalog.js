@@ -178,25 +178,13 @@ export default class Catalog {
     const dragDropElIndex = copyItems.findIndex(item => item.id == dragDropElId);
     const dragDropItem = this.catalogListItems.find(item => item.id == dragDropElId);
     const hoverElItem = this.catalogListItems.find(item => item.id == hoverElId);
-    const isCloseToDropDownEl = Math.abs(hoverElIndex - dragDropElIndex) === 1;
-    const isLastIndexHover = hoverElIndex === copyItems.length - 1;
-    const isBeforeLastIndexHover = hoverElIndex === copyItems.length - 2;
-    if(isCloseToDropDownEl) {
+    if(hoverElIndex > dragDropElIndex) {
       copyItems.splice(hoverElIndex, 1, dragDropItem);
-      copyItems.splice(dragDropElIndex, 1, hoverElItem);
-    } else if((dragDropElIndex < hoverElIndex) && isLastIndexHover) {
-      copyItems.splice(hoverElIndex, 1, dragDropItem);
-      copyItems.splice(hoverElIndex, 0, hoverElItem);
       copyItems.splice(dragDropElIndex, 1);
-    } else if(dragDropElIndex > hoverElIndex) {
-      copyItems.splice(hoverElIndex, 0, dragDropItem);
-      copyItems.splice(dragDropElIndex+1, 1);
-    } else if((dragDropElIndex < hoverElIndex) && isBeforeLastIndexHover) {
-      copyItems.splice(hoverElIndex+1, 0, dragDropItem);
-      copyItems.splice(dragDropElIndex, 1);
+      copyItems.splice(hoverElIndex-1, 0, hoverElItem);
     } else {
       copyItems.splice(hoverElIndex, 0, dragDropItem);
-      copyItems.splice(dragDropElIndex, 1);
+      copyItems.splice(dragDropElIndex+1, 1);
     }
 
     this.initCatalogListItems(copyItems);
