@@ -39,6 +39,14 @@ header {
     background: aqua;
 }
 
+.price {
+    text-align: center;
+}
+
+.name {
+    text-align: center;
+}
+
 .price::after {
     content: attr(data-currency);
     margin-left: 2px;
@@ -104,6 +112,12 @@ header {
 
 .body-drag-drop .categories-container:hover > .category {
     display: none;
+}
+
+@media (max-width: 1200px) {
+    .catalog-list-container {
+        flex-basis: 33%;
+    }
 }
 
 @media (max-width: 520px) {

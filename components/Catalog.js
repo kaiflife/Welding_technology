@@ -67,10 +67,16 @@ export default class Catalog {
       })
     );
     if(success) {
-      const { name, price } = this.changedCatalogItem;
+      const { name, price, currency } = this.changedCatalogItem;
+      const priceDataSets = {datasets: [{name: 'currency', value: currency}]}
       const dataEls = [
         {byEl: this.targetCatalogItemEl, innerHTML: name, byQuery: '.js-name'},
-        {byEl: this.targetCatalogItemEl, innerHTML: price, byQuery: '.js-price'},
+        {
+          byEl: this.targetCatalogItemEl,
+          innerHTML: price,
+          byQuery: '.js-price',
+          ...priceDataSets,
+        },
       ];
       dataEls.forEach(data => {
         changeDataEl.call(this, data);
@@ -153,6 +159,11 @@ export default class Catalog {
 
   onChangePrice(value) {
     this.changedCatalogItem.price = value || 'Цена не указана';
+    if(!value) {
+      this.changedCatalogItem.currency = '';
+    } else {
+      this.changedCatalogItem.currency = 'Р';
+    }
   }
 
   async saveModalChanges() {

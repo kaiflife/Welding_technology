@@ -5,6 +5,8 @@ const changeDataEl = ({
   innerHTML,
   value,
   removeClass,
+  datasets = [],
+  deleteDataSets = [],
   addClass,
   forEl,
 }) => {
@@ -14,6 +16,16 @@ const changeDataEl = ({
     if(className) el.className = className;
     if(removeClass) el.classList.remove(removeClass);
     if(addClass) el.classList.add(addClass);
+    if(datasets.length) {
+      datasets.forEach(newDataSet => {
+        el.dataset[newDataSet.name] = newDataSet.value;
+      });
+    }
+    if(deleteDataSets.length) {
+      deleteDataSets.forEach(newDataSet => {
+        delete el.dataset[newDataSet.name];
+      });
+    }
 
     return el;
   }
